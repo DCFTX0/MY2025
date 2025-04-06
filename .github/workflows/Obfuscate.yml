@@ -5,8 +5,8 @@ on:
     branches:
       - main
   schedule:
-        # Runs everyday at 1:00 AM
-        - cron: "0 1 * * *"
+    # Runs everyday at 1:00 AM
+    - cron: "0 1 * * *"
 
 permissions:
   contents: write
@@ -36,17 +36,10 @@ jobs:
         run: |
           javascript-obfuscator origin.js --output _worker.js \
           --compact true \
-          --control-flow-flattening true \
-          --control-flow-flattening-threshold 1 \
-          --dead-code-injection true \
-          --dead-code-injection-threshold 1 \
-          --identifier-names-generator hexadecimal \
           --rename-globals true \
-          --string-array true \
-          --string-array-encoding 'rc4' \
-          --string-array-threshold 1 \
-          --transform-object-keys true \
-          --unicode-escape-sequence true
+          --string-array false \
+          --control-flow-flattening false \
+          --dead-code-injection false
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -55,3 +48,10 @@ jobs:
           commit_message: ':arrow_up: update latest bpb panel'
           commit_author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
           push_options: '--set-upstream'
+
+      - name: Upload Obfuscated Worker Script to Cloudflare
+        run: |
+          # Assuming you have a cloudflare API token stored in GitHub Secrets
+          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/YOUR_ACCOUNT_ID/workers/scripts/YOUR_SCRIPT_NAME" \
+          -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+          -F "script=@_worker.js"
